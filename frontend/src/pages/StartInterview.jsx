@@ -110,8 +110,18 @@ export default function StartInterview({ setActivePage }) {
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
-          {error}
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleStart}
+            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-semibold shrink-0"
+          >
+            Retry
+          </button>
         </div>
       )}
 
