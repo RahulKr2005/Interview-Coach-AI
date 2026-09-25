@@ -6,13 +6,18 @@ import {
   PlayCircle, 
   History, 
   Settings,
-  AlertCircle
+  AlertCircle,
+  LogIn,
+  LogOut,
+  UserCheck
 } from 'lucide-react';
 import ModeBadge from './ModeBadge';
 import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar({ activePage, setActivePage }) {
   const { profile, activeMode, activeSessionId } = useUser();
+  const { user, isAuthenticated, logout, openAuthModal } = useAuth();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,7 +41,7 @@ export default function Navbar({ activePage, setActivePage }) {
                 <span className="font-bold text-lg tracking-tight text-white">InterviewCoach</span>
                 <span className="text-xs uppercase px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-300 font-mono font-semibold">AI</span>
               </div>
-              <p className="text-xs text-slate-400">Offline Placement Prep</p>
+              <p className="text-xs text-slate-400">Placement Interview Preparation & Practice Platform</p>
             </div>
           </div>
 
@@ -62,7 +67,7 @@ export default function Navbar({ activePage, setActivePage }) {
             })}
           </nav>
 
-          {/* Right Status Indicators & Active Session Resume */}
+          {/* Right Status Indicators & Active Session Resume & Auth */}
           <div className="flex items-center gap-3">
             {activeSessionId && activePage !== 'session' && (
               <button
@@ -79,16 +84,35 @@ export default function Navbar({ activePage, setActivePage }) {
               <ModeBadge mode={activeMode} size="sm" />
             </div>
 
-            {/* Profile Avatar / Role Tag */}
-            <div className="flex items-center gap-2 border-l border-slate-700 pl-3">
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400 font-bold text-xs uppercase">
-                {profile.name ? profile.name.charAt(0) : 'P'}
+            {/* Authenticated User or Login CTA */}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2.5 border-l border-slate-700 pl-3">
+                <div className="w-8 h-8 rounded-full bg-teal-500/20 border border-teal-500/40 flex items-center justify-center text-teal-300 font-bold text-xs uppercase">
+                  {user?.name ? user.name.charAt(0) : (profile.name ? profile.name.charAt(0) : 'U')}
+                </div>
+                <div className="hidden xl:block text-left">
+                  <p className="text-xs font-medium text-slate-200 truncate max-w-[120px]">{user?.name || profile.name}</p>
+                  <p className="text-[11px] text-teal-400 font-mono truncate max-w-[120px]">{user?.target_role || profile.target_role}</p>
+                </div>
+                <button
+                  onClick={logout}
+                  title="Sign out"
+                  className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
-              <div className="hidden xl:block text-left">
-                <p className="text-xs font-medium text-slate-200 truncate max-w-[120px]">{profile.name}</p>
-                <p className="text-[11px] text-teal-400 font-mono truncate max-w-[120px]">{profile.target_role}</p>
+            ) : (
+              <div className="flex items-center gap-2 border-l border-slate-700 pl-3">
+                <button
+                  onClick={() => openAuthModal('login')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

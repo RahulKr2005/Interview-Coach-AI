@@ -1,10 +1,16 @@
-# Forward to go_live.ps1 with any arguments
+# InterviewCoach AI - PowerShell Launcher (MERN Stack)
 param (
     [switch]$Dev = $false
 )
-$script = Join-Path $PSScriptRoot "go_live.ps1"
-if ($Dev) {
-    & $script -Dev
+
+$scriptRoot = $PSScriptRoot
+Set-Location $scriptRoot
+
+$batScript = Join-Path $scriptRoot "start_app.bat"
+if (Test-Path $batScript) {
+    & cmd.exe /c $batScript
 } else {
-    & $script
+    Write-Host "[*] Starting MERN Express Server on http://127.0.0.1:5000..." -ForegroundColor Cyan
+    Set-Location (Join-Path $scriptRoot "server")
+    node src/server.js
 }

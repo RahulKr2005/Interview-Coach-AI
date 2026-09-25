@@ -25,16 +25,18 @@ import Card from '../components/Card';
 import ModeBadge from '../components/ModeBadge';
 import { api } from '../api/client';
 import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard({ setActivePage, onSelectSession }) {
   const { profile, activeMode } = useUser();
+  const { isAuthenticated, openAuthModal } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     loadSummary();
-  }, []);
+  }, [isAuthenticated]);
 
   const loadSummary = async () => {
     try {
@@ -92,6 +94,21 @@ export default function Dashboard({ setActivePage, onSelectSession }) {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {!isAuthenticated && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-900 text-xs shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <span className="font-bold text-amber-700 uppercase tracking-wider text-[11px] bg-amber-100 px-2 py-0.5 rounded">Guest Mode</span>
+            <span>You are currently not logged in. Sign in or create an account to save mock sessions, scores, and resume data to your personal account.</span>
+          </div>
+          <button
+            onClick={() => openAuthModal('login')}
+            className="px-3.5 py-1.5 bg-amber-700 hover:bg-amber-800 text-white rounded-lg font-semibold shrink-0 transition-colors"
+          >
+            Sign In / Register
+          </button>
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl p-6 sm:p-8 text-white shadow-md relative overflow-hidden border border-slate-700">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

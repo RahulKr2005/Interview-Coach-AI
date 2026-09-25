@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
+import AuthModal from './components/AuthModal';
 import Dashboard from './pages/Dashboard';
 import ResumeWorkspace from './pages/ResumeWorkspace';
 import StartInterview from './pages/StartInterview';
@@ -75,16 +76,19 @@ export default function App() {
         )}
       </main>
 
-      {/* Offline & privacy footer */}
+      {/* Global Authentication Modal */}
+      <AuthModal />
+
+      {/* Placement platform footer */}
       <footer className="no-print bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-400">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-300">InterviewCoach AI</span>
             <span>•</span>
-            <span>Private Offline Placement Coach</span>
+            <span>Placement Interview Preparation & Practice Platform</span>
           </div>
           <div className="text-[11px] text-slate-400">
-            Bound to 127.0.0.1 • Zero Cloud Telemetry • Ready for Snapdragon-Powered HP PCs
+            MERN Stack (MongoDB, Express, React, Node.js) • Local & Secure • Zero Cloud Telemetry
           </div>
         </div>
       </footer>

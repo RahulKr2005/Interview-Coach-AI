@@ -20,14 +20,16 @@ import Card from '../components/Card';
 import ModeBadge from '../components/ModeBadge';
 import { api } from '../api/client';
 import { useUser } from '../context/UserContext';
+import { useAuth } from '../context/AuthContext';
 
 const SUPPORTED_ROLES = [
+  { id: 'MERN Stack Developer', name: 'MERN Stack Developer', desc: 'React, Express, Node.js, MongoDB, JWT Auth, REST APIs' },
   { id: 'Frontend Developer', name: 'Frontend Developer', desc: 'React, TypeScript, CSS Architecture, Web Performance' },
   { id: 'Backend Developer', name: 'Backend Developer', desc: 'APIs, Concurrency, Database Indexing, Caching, Systems' },
   { id: 'Full Stack Developer', name: 'Full Stack Developer', desc: 'End-to-End Architecture, Security, Docker, SSR, Integrations' },
-  { id: 'Java Developer', name: 'Java Developer', desc: 'JVM Architecture, Spring Boot, Concurrency, JPA/Hibernate' },
-  { id: 'Data Analyst', name: 'Data Analyst', desc: 'SQL Joins & Windows, EDA, A/B Testing, Business KPIs' },
+  { id: 'Java / DSA', name: 'Java / DSA', desc: 'JVM Architecture, Data Structures, Algorithms, Concurrency' },
   { id: 'DevOps Engineer', name: 'DevOps Engineer', desc: 'CI/CD, Kubernetes, Docker, Linux, Observability, IaC' },
+  { id: 'Data Analyst', name: 'Data Analyst', desc: 'SQL Joins & Windows, EDA, A/B Testing, Business KPIs' },
 ];
 
 const INTERVIEW_TYPES = [
@@ -46,8 +48,9 @@ const QUESTION_COUNTS = [5, 10, 15];
 
 export default function StartInterview({ setActivePage }) {
   const { profile, activeMode, setActiveSessionId } = useUser();
+  const { isAuthenticated, openAuthModal } = useAuth();
   const [inputMode, setInputMode] = useState('text'); // 'text' | 'voice'
-  const [selectedRole, setSelectedRole] = useState(profile.target_role || 'Frontend Developer');
+  const [selectedRole, setSelectedRole] = useState(profile.target_role || 'MERN Stack Developer');
   const [interviewType, setInterviewType] = useState('Technical');
   const [difficulty, setDifficulty] = useState('Intermediate');
   const [questionCount, setQuestionCount] = useState(5);
@@ -55,6 +58,11 @@ export default function StartInterview({ setActivePage }) {
   const [error, setError] = useState(null);
 
   const handleStart = async () => {
+    if (!isAuthenticated) {
+      openAuthModal('login');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -70,7 +78,11 @@ export default function StartInterview({ setActivePage }) {
       setActiveSessionId(session.id);
       setActivePage('session');
     } catch (err) {
-      setError(err.message || 'Failed to start interview session');
+      if (err.message && err.message.includes('401')) {
+        openAuthModal('login');
+      } else {
+        setError(err.message || 'Failed to start interview session');
+      }
       setLoading(false);
     }
   };

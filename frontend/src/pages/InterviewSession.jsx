@@ -43,16 +43,15 @@ export default function InterviewSession({ setActivePage, onCompleteSession }) {
 
   // Voice Interview Mode States
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [recordingState, setRecordingState] = useState('idle'); // 'idle' | 'recording' | 'transcribing' | 'review'
+  const [recordingState, setRecordingState] = useState('idle'); // 'idle' | 'recording' | 'review'
   const [recordingTime, setRecordingTime] = useState(0);
   const [transcribeNotice, setTranscribeNotice] = useState(null);
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
 
-  const mediaRecorderRef = useRef(null);
+  const recognitionRef = useRef(null);
   const audioStreamRef = useRef(null);
   const timerRef = useRef(null);
-  const chunksRef = useRef([]);
 
   useEffect(() => {
     if (activeSessionId) {
@@ -110,11 +109,14 @@ export default function InterviewSession({ setActivePage, onCompleteSession }) {
     }
 
     return () => {
-      // Unmount cleanup: cancel speech, stop timers, stop mic tracks
+      // Unmount cleanup: cancel speech, stop timers, stop mic tracks, stop recognition
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
       if (timerRef.current) clearInterval(timerRef.current);
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch (_) {}
+      }
       stopAllAudioTracks();
     };
   }, []);
@@ -150,63 +152,67 @@ export default function InterviewSession({ setActivePage, onCompleteSession }) {
     handleStopSpeaking();
     setTranscribeNotice(null);
 
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    const SpeechRec = typeof window !== 'undefined' && 
+      (window.SpeechRecognition || window.webkitSpeechRecognition);
+
+    if (!SpeechRec) {
       setTranscribeNotice({
-        type: 'error',
-        message: 'Microphone recording is not supported in this browser environment. Ensure you are accessing via localhost or HTTPS.'
+        type: 'warning',
+        message: 'Your browser does not have native SpeechRecognition (available in Chrome, Edge, Safari). You can type your response directly below or test in an updated browser.'
       });
       return;
     }
 
     try {
+      // Request mic permission
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioStreamRef.current = stream;
 
-      const candidateTypes = [
-        'audio/webm;codecs=opus',
-        'audio/webm',
-        'audio/mp4',
-        'audio/ogg;codecs=opus',
-        'audio/wav'
-      ];
-      const selectedMime = candidateTypes.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t)) || '';
+      const recognition = new SpeechRec();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
 
-      const recorder = new MediaRecorder(stream, selectedMime ? { mimeType: selectedMime } : {});
-      mediaRecorderRef.current = recorder;
-      chunksRef.current = [];
+      let accumulated = userAnswer ? userAnswer.trim() + ' ' : '';
 
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          chunksRef.current.push(e.data);
+      recognition.onresult = (event) => {
+        let interimText = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcriptChunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            accumulated += transcriptChunk + ' ';
+          } else {
+            interimText += transcriptChunk;
+          }
         }
+        setUserAnswer((accumulated + interimText).trim());
       };
 
-      recorder.onstop = async () => {
-        stopAllAudioTracks();
-        if (timerRef.current) clearInterval(timerRef.current);
-
-        if (chunksRef.current.length === 0) {
-          setRecordingState('idle');
-          setRecordingTime(0);
-          return;
-        }
-
-        const mime = recorder.mimeType || selectedMime || 'audio/webm';
-        const audioBlob = new Blob(chunksRef.current, { type: mime });
-
-        if (audioBlob.size < 1000) {
+      recognition.onerror = (e) => {
+        console.warn('[WebSpeech] Recognition error:', e.error);
+        if (e.error === 'not-allowed') {
+          setTranscribeNotice({
+            type: 'error',
+            message: 'Microphone permission was denied. Please allow microphone access in your browser.'
+          });
+        } else if (e.error === 'no-speech') {
+          // Normal timeout if user was quiet
+        } else {
           setTranscribeNotice({
             type: 'warning',
-            message: 'Recording was silent or very brief. Please speak clearly into your microphone or type your response below.'
+            message: `Speech recognition note: ${e.error}. You can also type or edit your answer directly below.`
           });
-          setRecordingState('review');
-          return;
         }
-
-        await handleTranscribeBlob(audioBlob, mime);
       };
 
-      recorder.start(500);
+      recognition.onend = () => {
+        setRecordingState('review');
+        if (timerRef.current) clearInterval(timerRef.current);
+        stopAllAudioTracks();
+      };
+
+      recognition.start();
+      recognitionRef.current = recognition;
       setRecordingState('recording');
       setRecordingTime(0);
 
@@ -243,54 +249,29 @@ export default function InterviewSession({ setActivePage, onCompleteSession }) {
 
   const handleStopRecording = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (_) {}
     }
+    stopAllAudioTracks();
+    setRecordingState('review');
+    setTranscribeNotice({
+      type: 'success',
+      message: 'Voice recorded and transcribed! Please review, edit if necessary, and submit your confirmed answer.'
+    });
   };
 
   const handleCancelRecording = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    chunksRef.current = [];
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch (_) {}
     }
     stopAllAudioTracks();
     setRecordingState('idle');
     setRecordingTime(0);
-  };
-
-  const handleTranscribeBlob = async (blob, mime) => {
-    try {
-      setRecordingState('transcribing');
-      const filename = mime.includes('mp4') ? 'answer.mp4' : (mime.includes('wav') ? 'answer.wav' : 'answer.webm');
-      const res = await api.transcribeAudio(blob, filename);
-
-      if (res.success && res.transcript) {
-        setUserAnswer(res.transcript);
-        setTranscribeNotice({
-          type: 'success',
-          message: 'Voice answer transcribed! Please review, edit if necessary, and submit your confirmed answer below.'
-        });
-      } else if (res.status === 'not_configured' || res.status === 'not_installed' || res.status === 'not_connected') {
-        setTranscribeNotice({
-          type: 'warning',
-          message: res.message || 'Local Speech-to-Text transcription is not configured on this PC.',
-          setupGuide: res.setup_instructions
-        });
-      } else {
-        setTranscribeNotice({
-          type: 'warning',
-          message: res.message || 'Could not generate a clear transcript. You can edit or type your answer directly in the box below.'
-        });
-      }
-    } catch (err) {
-      setTranscribeNotice({
-        type: 'error',
-        message: `Transcription request failed: ${err.message}. You can still type your answer directly below.`
-      });
-    } finally {
-      setRecordingState('review');
-    }
   };
 
   const handleSubmitAnswer = async () => {
@@ -619,7 +600,7 @@ export default function InterviewSession({ setActivePage, onCompleteSession }) {
                             className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold shadow-sm"
                           >
                             <Square className="w-3.5 h-3.5 fill-current" />
-                            <span>Stop & Transcribe</span>
+                            <span>Done Speaking (Stop)</span>
                           </button>
                         </div>
                       </div>

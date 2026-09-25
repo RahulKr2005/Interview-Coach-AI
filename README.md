@@ -1,154 +1,163 @@
 # InterviewCoach AI
 
-> **Private, offline-first placement interview preparation assistant** designed for local execution and aligned for **Snapdragon-powered HP PCs** running Windows on ARM.
+> **Placement Interview Preparation & Practice Platform**  
+> Built with the **MERN Stack** (MongoDB, Express, React, Node.js) for high performance, private local execution, and lightweight operation on standard laptops (including 4 GB RAM systems).
 
-InterviewCoach AI allows college students and job seekers to upload a resume, practice role-based technical and behavioral mock interviews, receive comprehensive feedback, and track preparation progress—all running 100% locally on their own PC.
+InterviewCoach AI allows college students and placement candidates to upload resumes, practice text and voice mock interviews across technical and behavioral domains, receive comprehensive rubric feedback with reference answers, and track progress over time.
 
 ---
 
 ## Key Features
 
-1. **Local Candidate Profile**: Configure your target placement role and experience level. Supported roles:
-   - Frontend Developer
-   - Backend Developer
-   - Full Stack Developer
-   - Java Developer
-   - Data Analyst
-   - DevOps Engineer
+1. **User Authentication & Profile Isolation**:
+   - Secure registration and login with bcrypt password hashing (salt rounds: 10).
+   - JWT tokens transmitted via secure `HttpOnly` cookies and `Authorization: Bearer` headers.
+   - Strict data ownership: candidates only access their own resumes, interview sessions, and metrics.
 2. **Resume Workspace**:
-   - Upload PDF resumes (under 5MB) with pure-Python extraction (`pypdf`).
-   - Scanned PDF detection with clear explanation and a paste-text fallback.
-   - Deterministic keyword extraction for skills, projects, and work experience.
-   - Interactive editor to refine extracted resume content before question generation.
-   - Strict untrusted input handling: resumes are evaluated as factual text, never executed as code.
-3. **Mock Interview Engine**:
-   - Technical, HR, and Resume-Based interview sessions.
+   - Pure-JS PDF text parsing via `pdf-parse` (supports files under 5MB).
+   - Scanned PDF detection heuristic with actionable warning and manual text-paste fallback.
+   - Deterministic keyword extraction for technical skills (React, Node.js, Express, MongoDB, Java, Python, Docker, etc.).
+   - Interactive editor to review and update extracted skills before question generation.
+3. **Curated Placement Question Bank**:
+   - Role-specific questions tailored for:
+     - **MERN Stack Developer** (React hooks, Express middleware, MongoDB aggregations, JWT cookies, Node Event Loop)
+     - **Frontend Developer** (Real DOM vs Virtual DOM, Event Loop, CSS architecture, Core Web Vitals)
+     - **Backend Developer** (Database indexing, API security, caching strategies, concurrency)
+     - **Java / DSA** (JVM architecture, Spring Boot, Big-O complexities, data structures)
+     - **DevOps Engineer** (Docker containerization, CI/CD, Kubernetes, Linux, IaC)
+     - **Full Stack Developer** & **Data Analyst**
+     - **HR & Behavioral** (STAR method, teamwork, conflict resolution, technical growth)
    - 3 Difficulty levels: Beginner, Intermediate, Advanced.
-   - Session sizes: 5, 10, or 15 questions.
-   - One question at a time with answer textbox, submit, skip, progress bar, and early exit.
-   - **Refresh Resilience**: An accidental browser reload preserves your exact question index and recorded answers.
-4. **Dual-Mode Inference**:
-   - **Basic Practice Mode (Offline Default)**: Works out of the box with zero external AI models installed. Over 70+ curated technical questions across 6 roles and 15 HR questions with reference model answers and self-review rubric checklists.
-   - **Local AI Mode**: Seamlessly connects to any local OpenAI-compatible inference server (such as Ollama, LM Studio, or llama.cpp) running on `localhost`.
+4. **Dual Inference Mode**:
+   - **Basic Practice Mode (Offline Default)**: 100% offline with zero external model dependencies. Questions evaluated with deterministic rubric checklists, strengths, missing points, and model placement answers (`is_ai_generated: false`).
+   - **Local AI Provider**: Connects to local Ollama (`http://127.0.0.1:11434`) or local OpenAI-compatible endpoints when enabled.
 5. **Voice Mock Interview Mode**:
-   - **Question Read-Aloud**: Browser `speechSynthesis` speaks questions aloud (Play, Stop, Replay) prioritizing installed local English voices.
-   - **Microphone Capture**: In-browser audio recording (`getUserMedia` + `MediaRecorder`) with automatic codec detection (`audio/webm;codecs=opus`, `audio/mp4`, `audio/wav`), live elapsed timer (up to 3:00 max), and Cancel / Stop controls.
-   - **Audio Track Hygiene**: Microphone tracks are strictly terminated upon completion, cancellation, navigation, or errors to avoid persistent browser recording locks.
-   - **Local Speech-to-Text (STT)**: Integration with local Whisper servers (e.g. `whisper.cpp`) or local Python Whisper with 25MB validation.
-   - **Strict Privacy**: Spoken audio is held temporarily only for transcription and is unconditionally deleted in a `try...finally: os.remove(...)` block. Zero raw audio is stored on disk or in SQLite.
-   - **Human-in-the-Loop Review**: Transcripts are automatically loaded into an editable answer field so candidates can review, correct, or refine their thoughts before submitting.
-   - **Honest Fallback**: When STT is offline, clear setup instructions are shown and candidates can continue practicing immediately by typing.
-6. **Results & Analytics Dashboard**:
-   - Visual score trend chart powered by locally bundled Recharts.
-   - Real-time focus area detection: highlights topics scored below 70% or frequently skipped.
-   - Printable session report (`window.print()` / Save as PDF).
-   - Data privacy: single session deletion and a nuclear "Delete All Local Data" action.
+   - **Question Read-Aloud**: Browser `speechSynthesis` speaks questions aloud with Play, Stop, and Replay controls.
+   - **Native Web Speech Recognition**: Transcribes spoken answers directly in the browser (`SpeechRecognition` / `webkitSpeechRecognition`) with real-time text feedback and zero backend latency.
+   - **Human-in-the-Loop Review**: Spoken text is loaded into an editable answer field so candidates can review, correct, and edit before submitting.
+6. **Analytics & Performance Dashboard**:
+   - Real-time score trends powered by Recharts.
+   - Focus Areas identification (topics scored below 70% or skipped).
+   - Clean empty state for brand new users (zero fabricated statistics).
+   - Printable official practice report (`window.print()` / Save as PDF).
 
 ---
 
 ## Tech Stack
 
-- **Frontend**: React 18, Vite, Tailwind CSS, Lucide Icons, Recharts.
-- **Backend**: Python 3.11, FastAPI, Uvicorn, Pydantic v2.
-- **Database**: SQLite (standard library, zero binary dependencies).
-- **PDF Extraction**: `pypdf 4.x` (100% pure Python, avoiding native C++ build hurdles on ARM64).
-- **Inference Adapter**: Configurable localhost OpenAI-compatible HTTP client (`httpx`).
+| Layer | Technology |
+| --- | --- |
+| **Frontend** | React 18, Vite, Tailwind CSS, Lucide Icons, Recharts |
+| **Backend** | Node.js (ES Modules), Express.js |
+| **Database** | MongoDB with Mongoose (with automatic in-memory fallback for local zero-setup dev) |
+| **Auth** | JWT with HttpOnly cookies + bcryptjs password hashing |
+| **PDF Extraction**| `pdf-parse` (pure JavaScript, lightweight and fast) |
+| **Testing** | Custom automated integration test runner (`server/tests/mern.test.js`) |
+
+*(Note: The active application runs entirely on the MERN stack. Legacy user database history is preserved in backend/data/ and virtual environment in venv/).*
 
 ---
 
-## Quick Start & Go Live (1-Click Run)
+## Quick Start & Running Locally
 
-### Option 1: 1-Click App Launcher (Recommended)
-Simply double-click the **`start_app.bat`** (or **`go_live.bat`**) file in the project folder, or run in PowerShell:
+### Option 1: 1-Click Windows Launcher (Recommended)
+Double-click **`start_app.bat`** (or **`start_mern.bat`**) in the project folder, or run:
 ```powershell
 .\start_app.bat
-# or: .\go_live.bat / .\go_live.ps1
 ```
-*This starts the FastAPI backend, verifies the frontend build, and opens the live application directly in your browser (`http://127.0.0.1:8000`)!*
-
-### Option 2: Single-Server Standalone Mode (Python Only)
-FastAPI directly serves the built React frontend on port 8000:
-```powershell
-.\venv\Scripts\Activate.ps1
-python backend\app\main.py
-```
-*Open `http://127.0.0.1:8000` in any browser!*
+This automatically verifies dependencies, starts the Node.js Express server on port 5000, and opens `http://127.0.0.1:5000` in your default browser.
 
 ---
 
-### Option 4: Manual Two-Terminal Setup (For Developers)
+### Option 2: Manual Setup
 
-#### Prerequisites
-- **Python 3.11+** installed (check with `python --version`).
-- **Node.js 18+** installed (check with `node --version`).
-
----
-
-### Step 1: Backend Setup
-Open a Windows PowerShell terminal in the project directory:
-
+#### Step 1: Start Backend Server
 ```powershell
-# 1. Navigate to project root
-cd "c:\Users\Dell\OneDrive\Documents\InterviewCoach AI"
-
-# 2. Create and activate a Python virtual environment
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-# 3. Upgrade pip and install backend dependencies
-python -m pip install --upgrade pip
-pip install -r backend\requirements.txt
-
-# 4. Start the FastAPI backend on 127.0.0.1:8000
-python backend\app\main.py
-```
-*The backend is now live at `http://127.0.0.1:8000` (API docs at `http://127.0.0.1:8000/docs`).*
-
----
-
-### Step 2: Frontend Setup
-Open a **second** Windows PowerShell terminal in the project directory:
-
-```powershell
-# 1. Navigate to the frontend directory
-cd "c:\Users\Dell\OneDrive\Documents\InterviewCoach AI\frontend"
-
-# 2. Install frontend dependencies
+cd "server"
 npm install
+node src/server.js
+```
+The server will start listening at `http://127.0.0.1:5000`.
 
-# 3. Launch the development server
+#### Step 2: Build or Run Frontend
+```powershell
+cd "frontend"
+npm install
+npm run build
+```
+Once built, the Express server on port 5000 serves `frontend/dist/` directly at `http://127.0.0.1:5000/`.
+
+If you prefer hot-reloading dev mode:
+```powershell
 npm run dev
 ```
-*Open your browser and navigate to `http://127.0.0.1:5173` to start practicing!*
+Access the Vite dev server at `http://127.0.0.1:5173/` (requests to `/api` proxy automatically to `http://127.0.0.1:5000`).
+
+---
+
+## Database Configuration (MongoDB)
+
+The server connects to MongoDB via `server/.env`:
+```env
+PORT=5000
+MONGODB_URI=mongodb://127.0.0.1:27017/interviewcoach
+JWT_SECRET=super-secret-mern-jwt-key-for-interviewcoach
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+```
+
+### Starting Local MongoDB
+- On Windows: Start the service via command prompt:
+  ```cmd
+  net start MongoDB
+  ```
+- Or connect to MongoDB Atlas by providing your Atlas connection string in `server/.env`:
+  ```env
+  MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/interviewcoach?retryWrites=true&w=majority
+  ```
+
+### Resilient In-Memory Fallback
+If MongoDB is not installed or running, the server detects this gracefully, logs actionable setup instructions, and activates an in-memory store so you can test authentication, resume uploads, mock interviews, and dashboard analytics with zero crashes.
+
+### Google Gemini AI & Demo Mode
+- When `GEMINI_API_KEY` is provided, live AI answer evaluation and resume improvement suggestions are performed via Google Gemini (`gemini-1.5-flash`).
+- When no key is provided, the platform automatically runs in **Demo Mode: Placement Practice Rubric**, providing deterministic placement scoring and recommendations with zero external network dependencies.
+- **User Consent**: Resume analysis requires explicit user consent via an interactive confirmation modal before sending resume content to Gemini.
 
 ---
 
 ## Running Verification Tests
 
-To run the automated backend test suite (question quotas, PDF extraction, interview state engine):
+Run the comprehensive integration test suite:
 ```powershell
-.\venv\Scripts\pytest -v
+cd "server"
+node tests/mern.test.js
 ```
-
-To run the frontend production build verification:
-```powershell
-cd frontend
-npm run build
-```
+This verifies 19 distinct behaviors:
+1. API Health Check
+2. User A Registration & Password Hashing
+3. User A Login & Cookie Generation
+4. Session Persistence (`/api/auth/me`)
+5. Pure-JS Resume Text Processing & Skill Extraction
+6. Interview Session Initialization (MERN Stack, 3 Questions)
+7. Answer Submission & Rubric Evaluation
+8. User B Registration
+9. **Data Ownership Isolation** (`403 Forbidden` when User B accesses User A's session)
+10. Dashboard Metrics Accuracy (User A)
+11. Dashboard Empty State for New User B (Zero Fabricated Stats)
+12. User A Logout
+13. Resume Update via `PUT /api/resume`
+14. **Resume Suggestions Consent Validation** (400 when consent is missing)
+15. **Resume Suggestions Generation** (actionable advice for target placement role)
+16. **Separate Question Evaluation Endpoint** (`/api/interview/question/:id/evaluate`)
+17. **Delete Resume** (`DELETE /api/resume`)
+18. **Settings Endpoint with Gemini / Demo Mode Status**
+19. Static Production Frontend Delivery at `http://127.0.0.1:5000/`
 
 ---
 
-## Offline & Privacy Guarantees
+## Privacy & Security
 
-- **No Remote Calls**: The frontend bundles all styles, SVGs, and chart scripts locally. No external fonts, Google CDNs, or tracking telemetry are loaded.
-- **Localhost Only**: The backend binds strictly to `127.0.0.1` and CORS is restricted to local browser ports (`5173`).
-- **Disk Storage**: Resume data and interview history are saved locally inside `backend/data/interviewcoach.db`. Notice: Local SQLite storage is stored in plaintext on disk and is not encrypted by default; you can delete individual sessions or wipe all stored data at any time from the History page.
-
----
-
-## Additional Documentation
-
-- [System Architecture](file:///docs/ARCHITECTURE.md)
-- [Local AI Setup Guide (Ollama & LM Studio)](file:///docs/LOCAL_AI_SETUP.md)
-- [Snapdragon-Powered HP PC Compatibility & Optimization](file:///docs/SNAPDRAGON_COMPATIBILITY.md)
-- [Hardware & Inference Benchmark Template](file:///docs/BENCHMARK_TEMPLATE.md)
+- **HttpOnly Cookies**: Prevents client-side scripts from reading authentication tokens (protects against XSS token theft).
+- **Transient Audio Processing**: Voice mock interviews transcribe directly in the browser via the Web Speech API with zero audio saved to disk.
+- **Strict Data Isolation**: Queries and mutations strictly enforce `userId` checks on all MongoDB documents.

@@ -11,14 +11,21 @@ import {
   FolderGit2,
   ClipboardPaste,
   ShieldCheck,
-  X
+  X,
+  Sparkles,
+  Trash2,
+  Check,
+  HelpCircle,
+  Lightbulb
 } from 'lucide-react';
 import Card from '../components/Card';
+import Modal from '../components/Modal';
+import ModeBadge from '../components/ModeBadge';
 import { api } from '../api/client';
 import { useUser } from '../context/UserContext';
 
 export default function ResumeWorkspace({ setActivePage }) {
-  const { reloadProfileAndSettings } = useUser();
+  const { profile, reloadProfileAndSettings } = useUser();
   const [resumeData, setResumeData] = useState({
     raw_text: '',
     edited_text: '',
@@ -34,6 +41,17 @@ export default function ResumeWorkspace({ setActivePage }) {
   const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'paste' | 'editor'
   const [newSkillInput, setNewSkillInput] = useState('');
 
+  // AI suggestions & consent modal state
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [hasConsent, setHasConsent] = useState(false);
+  const [selectedRoleForAi, setSelectedRoleForAi] = useState(profile?.target_role || 'MERN Stack Developer');
+  const [requestingAi, setRequestingAi] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState(null);
+
+  // Delete resume modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     loadResume();
   }, []);
@@ -42,8 +60,14 @@ export default function ResumeWorkspace({ setActivePage }) {
     try {
       setLoading(true);
       const data = await api.getResume();
-      setResumeData(data);
-      if (data.edited_text) {
+      if (data && data.has_resume) {
+        setResumeData({
+          raw_text: data.extracted_text || '',
+          edited_text: data.extracted_text || '',
+          extracted_skills: data.skills || [],
+          extracted_projects: [],
+          extracted_experience: data.experience_summary ? [data.experience_summary] : [],
+        });
         setActiveTab('editor');
       }
     } catch (err) {
@@ -150,13 +174,71 @@ export default function ResumeWorkspace({ setActivePage }) {
       setResumeData(updated);
       setNotice({
         type: 'success',
-        message: 'Resume changes saved successfully to your local SQLite database.',
+        message: 'Resume changes saved successfully.',
       });
       await reloadProfileAndSettings();
     } catch (err) {
       setNotice({ type: 'error', message: err.message || 'Failed to save changes.' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteResume = async () => {
+    try {
+      setDeleting(true);
+      await api.deleteResume();
+      setResumeData({
+        raw_text: '',
+        edited_text: '',
+        extracted_skills: [],
+        extracted_projects: [],
+        extracted_experience: [],
+      });
+      setAiSuggestions(null);
+      setShowDeleteModal(false);
+      setNotice({
+        type: 'success',
+        message: 'Resume has been deleted successfully.',
+      });
+      setActiveTab('upload');
+      await reloadProfileAndSettings();
+    } catch (err) {
+      setNotice({ type: 'error', message: err.message || 'Failed to delete resume.' });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleRequestSuggestions = async () => {
+    if (!hasConsent) {
+      setNotice({
+        type: 'warning',
+        message: 'User consent is required before sending resume text to Google Gemini for AI suggestions.',
+      });
+      return;
+    }
+
+    try {
+      setRequestingAi(true);
+      setNotice(null);
+      const res = await api.getResumeSuggestions({
+        target_role: selectedRoleForAi,
+        has_consent: true,
+      });
+      setAiSuggestions(res.suggestions);
+      setShowConsentModal(false);
+      setNotice({
+        type: 'success',
+        message: 'AI improvement suggestions generated successfully! See the breakdown below.',
+      });
+    } catch (err) {
+      setNotice({
+        type: 'error',
+        message: err.message || 'Failed to generate AI resume suggestions.',
+      });
+    } finally {
+      setRequestingAi(false);
     }
   };
 
@@ -328,14 +410,36 @@ export default function ResumeWorkspace({ setActivePage }) {
               title="Resume Content (Editable)"
               subtitle="Verify or modify your extracted resume text before mock interview generation"
               action={
-                <button
-                  onClick={handleSaveEdits}
-                  disabled={saving}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setHasConsent(false);
+                      setShowConsentModal(true);
+                    }}
+                    disabled={!resumeData.edited_text}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50"
+                    title="Get AI feedback on how to improve this resume for your placement role"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>AI Suggestions</span>
+                  </button>
+                  <button
+                    onClick={handleSaveEdits}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 shadow-xs"
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{saving ? 'Saving...' : 'Save'}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 text-red-600 hover:bg-red-50 border border-red-200 rounded-lg text-xs font-semibold transition-colors"
+                    title="Delete this resume"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Delete</span>
+                  </button>
+                </div>
               }
             >
               <textarea
@@ -447,6 +551,207 @@ export default function ResumeWorkspace({ setActivePage }) {
           </div>
         </div>
       )}
+
+      {/* AI Suggestions Results Card */}
+      {aiSuggestions && (
+        <Card
+          className="border-indigo-200 bg-white shadow-sm"
+          title="AI Resume Improvement Recommendations"
+          subtitle={`Tailored for placement in ${selectedRoleForAi}`}
+          action={
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                {aiSuggestions.mode || 'AI Suggestions'}
+              </span>
+              <button
+                onClick={() => setAiSuggestions(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                title="Dismiss suggestions"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          }
+        >
+          <div className="space-y-4">
+            {aiSuggestions.role_alignment_feedback && (
+              <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-950">
+                <span className="font-bold block text-indigo-900 mb-1">Role Alignment Analysis:</span>
+                <p className="leading-relaxed">{aiSuggestions.role_alignment_feedback}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Missing Information */}
+              {aiSuggestions.missing_information && aiSuggestions.missing_information.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 space-y-1.5">
+                  <span className="text-xs font-bold text-amber-900 uppercase tracking-wider block">
+                    Missing or Underrepresented Details
+                  </span>
+                  <ul className="space-y-1 text-xs text-amber-950">
+                    {aiSuggestions.missing_information.map((item, i) => (
+                      <li key={i} className="flex items-start gap-1.5">
+                        <span className="text-amber-600 font-bold shrink-0">•</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Clarity Improvements */}
+              {aiSuggestions.clarity_improvements && aiSuggestions.clarity_improvements.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-1.5">
+                  <span className="text-xs font-bold text-blue-900 uppercase tracking-wider block">
+                    Clarity & Impact Suggestions
+                  </span>
+                  <ul className="space-y-1 text-xs text-blue-950">
+                    {aiSuggestions.clarity_improvements.map((item, i) => (
+                      <li key={i} className="flex items-start gap-1.5">
+                        <Check className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Project Descriptions */}
+              {aiSuggestions.project_descriptions && aiSuggestions.project_descriptions.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                    Project Description Polish
+                  </span>
+                  <ul className="space-y-1 text-xs text-slate-700">
+                    {aiSuggestions.project_descriptions.map((item, i) => (
+                      <li key={i} className="flex items-start gap-1.5">
+                        <Lightbulb className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Recommended Skills to Learn */}
+              {aiSuggestions.recommended_skills_to_learn && aiSuggestions.recommended_skills_to_learn.length > 0 && (
+                <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 space-y-1.5">
+                  <span className="text-xs font-bold text-emerald-900 uppercase tracking-wider block">
+                    High-Impact Placement Skills to Target
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {aiSuggestions.recommended_skills_to_learn.map((skill, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-xs font-medium border border-emerald-200"
+                      >
+                        + {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* AI Improvement Suggestions Consent Modal */}
+      <Modal
+        isOpen={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        title="Request AI Resume Suggestions"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Target Placement Role
+            </label>
+            <select
+              value={selectedRoleForAi}
+              onChange={(e) => setSelectedRoleForAi(e.target.value)}
+              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-teal-500 bg-white"
+            >
+              <option value="MERN Stack Developer">MERN Stack Developer</option>
+              <option value="Frontend Developer">Frontend Developer</option>
+              <option value="Backend Developer">Backend Developer</option>
+              <option value="Full Stack Developer">Full Stack Developer</option>
+              <option value="Java / DSA">Java / DSA</option>
+              <option value="Data Analyst">Data Analyst</option>
+              <option value="DevOps Engineer">DevOps Engineer</option>
+            </select>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold text-amber-800">
+              <ShieldCheck className="w-4 h-4 text-amber-700" />
+              <span>AI Data Notice & Consent</span>
+            </div>
+            <p className="leading-relaxed text-[11px]">
+              To provide targeted placement advice, your extracted resume text will be sent to the configured AI provider (Google Gemini or local practice rubric). The text is used strictly to produce recommendations. No personal identifiable information is shared with unauthorized third parties.
+            </p>
+          </div>
+
+          <label className="flex items-start gap-2.5 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer text-xs text-slate-700">
+            <input
+              type="checkbox"
+              checked={hasConsent}
+              onChange={(e) => setHasConsent(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300"
+            />
+            <span>
+              I give explicit consent to send my resume text to the AI service for improvement suggestions.
+            </span>
+          </label>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setShowConsentModal(false)}
+              className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg text-xs font-semibold hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={!hasConsent || requestingAi}
+              onClick={handleRequestSuggestions}
+              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50 transition-colors shadow-xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>{requestingAi ? 'Generating Suggestions...' : 'Generate AI Suggestions'}</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Resume Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Stored Resume?"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600">
+            Are you sure you want to delete your stored resume and extracted technical skills? You will need to upload or paste your resume again.
+          </p>
+          <div className="flex justify-end gap-2 pt-3">
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="px-4 py-2 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteResume}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold disabled:opacity-50"
+            >
+              {deleting ? 'Deleting...' : 'Delete Resume'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
