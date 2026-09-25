@@ -1,136 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InterviewCoach AI</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-    body {
-      background-color: #0f172a;
-      color: #f8fafc;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
-    }
-    .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 36px 32px;
-      max-width: 440px;
-      width: 100%;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-    }
-    .logo {
-      font-size: 36px;
-      margin-bottom: 12px;
-    }
-    h1 {
-      font-size: 20px;
-      font-weight: 700;
-      color: #ffffff;
-      margin-bottom: 8px;
-    }
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid rgba(13, 148, 136, 0.2);
-      border-top-color: #0d9488;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 20px auto;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    p {
-      font-size: 14px;
-      color: #94a3b8;
-      line-height: 1.5;
-    }
-    .offline-notice {
-      display: none;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid #334155;
-    }
-    .offline-notice p {
-      font-size: 13px;
-      color: #cbd5e1;
-      margin-bottom: 12px;
-    }
-    code {
-      background: #090d16;
-      border: 1px solid #334155;
-      color: #38bdf8;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-    }
-    .btn {
-      display: inline-block;
-      margin-top: 16px;
-      background: #0d9488;
-      color: #ffffff;
-      padding: 10px 20px;
-      border-radius: 8px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 13px;
-      transition: background 0.15s ease;
-    }
-    .btn:hover {
-      background: #0f766e;
-    }
-  </style>
-  <script>
-    function openApp() {
-      window.location.replace("http://127.0.0.1:8000/");
-    }
-
-    // Ping backend health - if ready, immediately forward
-    function checkBackend() {
-      fetch('http://127.0.0.1:8000/api/health', { mode: 'cors' })
-        .then(function(res) {
-          if (res.ok) {
-            openApp();
-          }
-        })
-        .catch(function() {
-          setTimeout(function() {
-            var el = document.getElementById('offline-notice');
-            if (el) el.style.display = 'block';
-            var spin = document.getElementById('spinner');
-            if (spin) spin.style.display = 'none';
-          }, 1500);
-        });
-    }
-
-    checkBackend();
-    // Auto check every 2 seconds to redirect as soon as backend is launched
-    setInterval(checkBackend, 2000);
-  </script>
-</head>
-<body>
-  <div class="card">
-    <div class="logo">🎯</div>
-    <h1>InterviewCoach AI</h1>
-    <div class="spinner" id="spinner"></div>
-    <p id="status-text">Opening application...</p>
-    
-    <div class="offline-notice" id="offline-notice">
-      <p>Backend service is not running yet.<br>Double-click <code>start_app.bat</code> in the project folder to start.</p>
-      <a href="http://127.0.0.1:8000" class="btn">Retry Open App</a>
-    </div>
-  </div>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Private, offline-first placement interview preparation assistant" />
+    <title>InterviewCoach AI - Offline Placement Prep</title>
+    <script type="module" crossorigin src="/assets/index-D0hvbs-C.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B8XcgH2G.css">
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased font-sans min-h-screen">
+    <div id="root"></div>
+  </body>
 </html>
