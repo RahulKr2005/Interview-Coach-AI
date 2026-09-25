@@ -58,20 +58,15 @@ InterviewCoach AI allows college students and job seekers to upload a resume, pr
 
 ## Quick Start & Go Live (1-Click Run)
 
-### Option 1: 1-Click Go Live Launcher (Recommended)
-Simply double-click the **`go_live.bat`** file in the project folder, or run in PowerShell:
+### Option 1: 1-Click App Launcher (Recommended)
+Simply double-click the **`start_app.bat`** (or **`go_live.bat`**) file in the project folder, or run in PowerShell:
 ```powershell
-.\go_live.bat
-# or: .\go_live.ps1
+.\start_app.bat
+# or: .\go_live.bat / .\go_live.ps1
 ```
-*This starts the FastAPI backend and frontend automatically, and opens the live application directly in your browser!*
+*This starts the FastAPI backend, verifies the frontend build, and opens the live application directly in your browser (`http://127.0.0.1:8000`)!*
 
-### Option 2: VS Code "Go Live" Extension (Live Server)
-1. Open this project in VS Code.
-2. Click the **"Go Live"** button in the bottom status bar (port 5500).
-3. The **InterviewCoach AI Live Portal** will open in your browser with real-time service monitors and instant access to the application and API docs.
-
-### Option 3: Single-Server Standalone Mode (Python Only)
+### Option 2: Single-Server Standalone Mode (Python Only)
 FastAPI directly serves the built React frontend on port 8000:
 ```powershell
 .\venv\Scripts\Activate.ps1

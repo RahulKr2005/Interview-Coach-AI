@@ -3,370 +3,134 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>InterviewCoach AI - Go Live Portal</title>
-  <script>
-    // If backend is already running, immediately forward to the live application
-    (async function quickRedirect() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('monitor') === '1') return;
-      try {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 1000);
-        const r = await fetch('http://127.0.0.1:8000/api/health', { mode: 'cors', signal: ctrl.signal });
-        clearTimeout(tid);
-        if (r.ok) {
-          const d = await r.json();
-          if (d.status === 'healthy') {
-            window.location.replace('http://127.0.0.1:8000');
-          }
-        }
-      } catch (_) {}
-    })();
-  </script>
+  <title>InterviewCoach AI</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --teal: #0d9488;
-      --teal-hover: #0f766e;
-      --teal-light: #ccfbf1;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --emerald: #10b981;
-      --amber: #f59e0b;
-      --rose: #ef4444;
-    }
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     body {
-      background-color: var(--bg);
-      color: var(--text);
+      background-color: #0f172a;
+      color: #f8fafc;
       min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 24px;
+      text-align: center;
     }
-    .container {
-      width: 100%;
-      max-width: 620px;
-      background: var(--card);
-      border: 1px solid var(--border);
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
       border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+      padding: 36px 32px;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
     }
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 20px;
-    }
-    .logo-badge {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #0d9488, #0284c7);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
+    .logo {
+      font-size: 36px;
+      margin-bottom: 12px;
     }
     h1 {
       font-size: 20px;
       font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin-bottom: 8px;
     }
-    p.subtitle {
-      font-size: 13px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-    .status-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 24px;
-    }
-    .status-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
-      font-size: 13px;
-    }
-    .status-row:last-child {
-      border-bottom: none;
-    }
-    .pill {
-      padding: 4px 10px;
-      border-radius: 9999px;
-      font-size: 11px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .pill-green {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-    .pill-amber {
-      background: rgba(245, 158, 11, 0.15);
-      color: #fbbf24;
-      border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-    .pill-slate {
-      background: rgba(100, 116, 139, 0.15);
-      color: #94a3b8;
-      border: 1px solid rgba(100, 116, 139, 0.3);
-    }
-    .pill-dot {
-      width: 6px;
-      height: 6px;
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(13, 148, 136, 0.2);
+      border-top-color: #0d9488;
       border-radius: 50%;
-      background: currentColor;
+      animation: spin 0.8s linear infinite;
+      margin: 20px auto;
     }
-    .alert-banner {
-      display: none;
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #fca5a5;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 12px;
-      margin-bottom: 20px;
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    p {
+      font-size: 14px;
+      color: #94a3b8;
       line-height: 1.5;
     }
-    .btn-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 24px;
+    .offline-notice {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #334155;
+    }
+    .offline-notice p {
+      font-size: 13px;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+    }
+    code {
+      background: #090d16;
+      border: 1px solid #334155;
+      color: #38bdf8;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px;
     }
     .btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      width: 100%;
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
+      display: inline-block;
+      margin-top: 16px;
+      background: #0d9488;
+      color: #ffffff;
+      padding: 10px 20px;
+      border-radius: 8px;
       text-decoration: none;
-      transition: all 0.15s ease;
-      cursor: pointer;
-      border: none;
+      font-weight: 600;
+      font-size: 13px;
+      transition: background 0.15s ease;
     }
-    .btn-primary {
-      background: var(--teal);
-      color: #fff;
-    }
-    .btn-primary:hover {
-      background: var(--teal-hover);
-      transform: translateY(-1px);
-    }
-    .btn-secondary {
-      background: #334155;
-      color: #e2e8f0;
-    }
-    .btn-secondary:hover {
-      background: #475569;
-    }
-    .instructions {
-      background: rgba(13, 148, 136, 0.08);
-      border: 1px solid rgba(13, 148, 136, 0.25);
-      border-radius: 12px;
-      padding: 16px;
-      font-size: 12px;
-      color: #99f6e4;
-      line-height: 1.6;
-    }
-    .code-box {
-      background: #090d16;
-      border: 1px solid #1e293b;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-family: monospace;
-      color: #38bdf8;
-      margin-top: 8px;
-      user-select: all;
-    }
-    .footer {
-      margin-top: 20px;
-      font-size: 11px;
-      color: #64748b;
-      text-align: center;
+    .btn:hover {
+      background: #0f766e;
     }
   </style>
+  <script>
+    function openApp() {
+      window.location.replace("http://127.0.0.1:8000/");
+    }
+
+    // Ping backend health - if ready, immediately forward
+    function checkBackend() {
+      fetch('http://127.0.0.1:8000/api/health', { mode: 'cors' })
+        .then(function(res) {
+          if (res.ok) {
+            openApp();
+          }
+        })
+        .catch(function() {
+          setTimeout(function() {
+            var el = document.getElementById('offline-notice');
+            if (el) el.style.display = 'block';
+            var spin = document.getElementById('spinner');
+            if (spin) spin.style.display = 'none';
+          }, 1500);
+        });
+    }
+
+    checkBackend();
+    // Auto check every 2 seconds to redirect as soon as backend is launched
+    setInterval(checkBackend, 2000);
+  </script>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="logo-badge">🎯</div>
-      <div>
-        <h1>InterviewCoach AI</h1>
-        <p class="subtitle">Live Launcher & Local Service Monitor</p>
-      </div>
-    </div>
-
-    <div id="alert-banner" class="alert-banner">
-      <strong>⚠️ Service Offline:</strong> Browser pages cannot start local processes due to operating system sandbox security. Run <code style="color:#38bdf8">go_live.bat</code> to start the FastAPI backend and web application.
-    </div>
-
-    <div class="status-card">
-      <div class="status-row">
-        <span>FastAPI Backend (<code style="color:#38bdf8">127.0.0.1:8000</code>)</span>
-        <span id="backend-status" class="pill pill-slate"><span class="pill-dot"></span> Checking...</span>
-      </div>
-      <div class="status-row">
-        <span>Vite Dev Server (<code style="color:#38bdf8">127.0.0.1:5173</code>)</span>
-        <span id="vite-status" class="pill pill-slate"><span class="pill-dot"></span> Checking...</span>
-      </div>
-      <div class="status-row">
-        <span>Privacy & Storage</span>
-        <span id="storage-status" class="pill pill-slate"><span class="pill-dot"></span> Checking...</span>
-      </div>
-    </div>
-
-    <div class="btn-group">
-      <a id="btn-app-8000" href="http://127.0.0.1:8000" class="btn btn-primary" target="_blank">
-        🚀 Open Live App (Port 8000 - Standalone Production)
-      </a>
-      <a id="btn-app-5173" href="http://127.0.0.1:5173" class="btn btn-secondary" target="_blank">
-        ⚡ Open Live App (Port 5173 - Dev Server)
-      </a>
-      <a id="btn-app-docs" href="http://127.0.0.1:8000/docs" class="btn btn-secondary" target="_blank">
-        📖 Open Backend API Docs (Swagger)
-      </a>
-    </div>
-
-    <div class="instructions" id="instructions-box">
-      <strong>💡 How to Go Live in 1 Click:</strong><br>
-      Double-click the <strong style="color:#fff">go_live.bat</strong> file in this project folder, or run in PowerShell:
-      <div class="code-box">.\go_live.bat</div>
-      This automatically checks Python, verifies the frontend build, detects port conflicts, starts the services, and opens the live app once verified ready.
-    </div>
-
-    <div class="footer">
-      Optimized for Snapdragon-powered HP PCs &bull; Offline-First Placement Assistant
+  <div class="card">
+    <div class="logo">🎯</div>
+    <h1>InterviewCoach AI</h1>
+    <div class="spinner" id="spinner"></div>
+    <p id="status-text">Opening application...</p>
+    
+    <div class="offline-notice" id="offline-notice">
+      <p>Backend service is not running yet.<br>Double-click <code>start_app.bat</code> in the project folder to start.</p>
+      <a href="http://127.0.0.1:8000" class="btn">Retry Open App</a>
     </div>
   </div>
-
-  <script>
-    let isBackendOnline = false;
-    let isViteOnline = false;
-
-    async function fetchWithTimeout(url, options = {}, timeoutMs = 2500) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      try {
-        const response = await fetch(url, { ...options, signal: controller.signal });
-        clearTimeout(timeoutId);
-        return response;
-      } catch (err) {
-        clearTimeout(timeoutId);
-        throw err;
-      }
-    }
-
-    async function checkHealth() {
-      // 1. Check Backend Health
-      try {
-        const res = await fetchWithTimeout('http://127.0.0.1:8000/api/health', { method: 'GET', mode: 'cors' }, 2500);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === 'healthy') {
-            isBackendOnline = true;
-            document.getElementById('backend-status').className = 'pill pill-green';
-            document.getElementById('backend-status').innerHTML = '<span class="pill-dot"></span> Online & Ready';
-            
-            const storageEl = document.getElementById('storage-status');
-            storageEl.className = 'pill pill-green';
-            storageEl.innerHTML = `<span class="pill-dot"></span> ${data.storage} (${data.database})`;
-            document.getElementById('alert-banner').style.display = 'none';
-
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('monitor') !== '1') {
-              window.location.replace('http://127.0.0.1:8000');
-              return;
-            }
-          } else {
-            isBackendOnline = false;
-            document.getElementById('backend-status').className = 'pill pill-amber';
-            document.getElementById('backend-status').innerHTML = `<span class="pill-dot"></span> Degraded (${data.database || 'Check DB'})`;
-            
-            const storageEl = document.getElementById('storage-status');
-            storageEl.className = 'pill pill-amber';
-            storageEl.innerHTML = '<span class="pill-dot"></span> Storage Warning';
-          }
-        } else {
-          throw new Error('HTTP ' + res.status);
-        }
-      } catch (err) {
-        isBackendOnline = false;
-        document.getElementById('backend-status').className = 'pill pill-amber';
-        document.getElementById('backend-status').innerHTML = '<span class="pill-dot"></span> Offline (Start via go_live.bat)';
-        
-        const storageEl = document.getElementById('storage-status');
-        storageEl.className = 'pill pill-slate';
-        storageEl.innerHTML = '<span class="pill-dot"></span> Awaiting Backend...';
-      }
-
-      // 2. Check Vite Dev Server
-      try {
-        await fetchWithTimeout('http://127.0.0.1:5173', { method: 'HEAD', mode: 'no-cors' }, 1500);
-        isViteOnline = true;
-        document.getElementById('vite-status').className = 'pill pill-green';
-        document.getElementById('vite-status').innerHTML = '<span class="pill-dot"></span> Online (Dev Server)';
-      } catch (_) {
-        isViteOnline = false;
-        document.getElementById('vite-status').className = 'pill pill-slate';
-        document.getElementById('vite-status').innerHTML = '<span class="pill-dot"></span> Standby (Optional Dev Mode)';
-      }
-    }
-
-    // Attach click warnings if clicking links while offline
-    document.getElementById('btn-app-8000').addEventListener('click', (e) => {
-      if (!isBackendOnline) {
-        e.preventDefault();
-        const banner = document.getElementById('alert-banner');
-        banner.style.display = 'block';
-        banner.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-
-    document.getElementById('btn-app-docs').addEventListener('click', (e) => {
-      if (!isBackendOnline) {
-        e.preventDefault();
-        const banner = document.getElementById('alert-banner');
-        banner.style.display = 'block';
-        banner.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-
-    document.getElementById('btn-app-5173').addEventListener('click', (e) => {
-      if (!isViteOnline) {
-        e.preventDefault();
-        alert('Vite dev server is currently on standby. The primary standalone application runs on Port 8000. To run Vite dev server, execute "npm run dev" inside the frontend directory, or launch go_live.bat --dev.');
-      }
-    });
-
-    checkHealth();
-    setInterval(checkHealth, 2500);
-  </script>
 </body>
 </html>
