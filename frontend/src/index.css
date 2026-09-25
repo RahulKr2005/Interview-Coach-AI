@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 selection:bg-teal-100 selection:text-teal-900;
+  }
+}
+
+/* Print layout optimizations for session export reports */
+@media print {
+  header, nav, .no-print, button {
+    display: none !important;
+  }
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .card, .shadow-sm, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+}
