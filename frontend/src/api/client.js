@@ -1,5 +1,5 @@
-const API_BASE = (typeof window !== 'undefined' && window.location.port === '5500')
-  ? 'http://127.0.0.1:8000/api'
+const API_BASE = (typeof window !== 'undefined' && window.location.port !== '8000' && window.location.port !== '')
+  ? `http://${window.location.hostname || '127.0.0.1'}:8000/api`
   : '/api';
 
 async function request(endpoint, options = {}) {
