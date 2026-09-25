@@ -37,6 +37,7 @@ app.include_router(profile.router, prefix="/api")
 app.include_router(resume.router, prefix="/api")
 app.include_router(interview.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
+app.include_router(dashboard.router, prefix="")
 app.include_router(settings.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 

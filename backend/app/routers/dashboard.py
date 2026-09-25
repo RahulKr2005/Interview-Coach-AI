@@ -6,6 +6,9 @@ from app.schemas import DashboardSummaryResponse
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
 @router.get("/summary", response_model=DashboardSummaryResponse)
+@router.get("/summary/", response_model=DashboardSummaryResponse)
+@router.get("", response_model=DashboardSummaryResponse)
+@router.get("/", response_model=DashboardSummaryResponse)
 def get_dashboard_summary():
     with get_db() as conn:
         cursor = conn.cursor()

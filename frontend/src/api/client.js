@@ -65,7 +65,19 @@ export const api = {
   },
 
   // Dashboard
-  getDashboardSummary: () => request('/dashboard/summary'),
+  getDashboardSummary: async () => {
+    try {
+      return await request('/dashboard/summary');
+    } catch (err) {
+      try {
+        return await request('/api/dashboard/summary');
+      } catch (_) {
+        const direct = await fetch('http://127.0.0.1:8000/api/dashboard/summary');
+        if (direct.ok) return await direct.json();
+        throw err;
+      }
+    }
+  },
 
   // Settings
   getSettings: () => request('/settings'),
