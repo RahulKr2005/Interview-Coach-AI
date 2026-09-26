@@ -95,6 +95,13 @@ Access the Vite dev server at `http://127.0.0.1:5173/` (requests to `/api` proxy
 
 ---
 
+### Option 3: VS Code "Go Live" (Live Server)
+1. Start the Express backend on port 5000 (`node server/src/server.js` or `.\start_app.bat`).
+2. Click **Go Live** in VS Code (or open `index.html` via Live Server on port 5500).
+3. The root `index.html` redirects automatically to `frontend/dist/index.html`. Dual-mode authentication (HttpOnly cookies + localStorage Bearer tokens) enables full Sign In, Resume Upload, and Mock Interview capabilities seamlessly across dev ports.
+
+---
+
 ## Database Configuration (MongoDB)
 
 The server connects to MongoDB via `server/.env`:
