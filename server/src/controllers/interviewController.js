@@ -75,6 +75,22 @@ export async function startInterview(req, res, next) {
       questions = getQuestionsForSession(target_role, interview_type, difficulty, count);
     }
 
+    // Mark any previous in-progress sessions as completed to prevent collision
+    if (isMongoConnected()) {
+      await InterviewSession.updateMany(
+        { userId: req.user._id, status: 'in_progress' },
+        { status: 'completed', completed_at: new Date() }
+      );
+    } else {
+      const prior = memoryStore.findSessionsByUserId(userId);
+      prior.forEach(s => {
+        if (s.status === 'in_progress') {
+          s.status = 'completed';
+          s.completed_at = new Date();
+        }
+      });
+    }
+
     const sessionPayload = {
       userId,
       target_role,
@@ -137,7 +153,7 @@ export async function getSession(req, res, next) {
 export async function submitAnswer(req, res, next) {
   try {
     const userId = String(req.user._id || req.user.id);
-    const { question_id, user_answer } = req.body;
+    const { question_id, user_answer, session_id } = req.body;
 
     if (!user_answer || user_answer.trim().length === 0) {
       return res.status(400).json({
@@ -146,16 +162,27 @@ export async function submitAnswer(req, res, next) {
       });
     }
 
-    // Find active session for user
+    // Find active session for user (by session_id if provided, else most recent in_progress)
     let session = null;
-    if (isMongoConnected()) {
-      session = await InterviewSession.findOne({
-        userId: req.user._id,
-        status: 'in_progress',
-      });
-    } else {
-      const all = memoryStore.findSessionsByUserId(userId);
-      session = all.find(s => s.status === 'in_progress');
+    if (session_id) {
+      if (isMongoConnected()) {
+        session = await InterviewSession.findOne({ _id: session_id, userId: req.user._id });
+      } else {
+        const found = memoryStore.findSessionById(session_id);
+        if (found && String(found.userId) === userId) session = found;
+      }
+    }
+
+    if (!session) {
+      if (isMongoConnected()) {
+        session = await InterviewSession.findOne({
+          userId: req.user._id,
+          status: 'in_progress',
+        }).sort({ createdAt: -1 });
+      } else {
+        const all = memoryStore.findSessionsByUserId(userId);
+        session = all.find(s => s.status === 'in_progress');
+      }
     }
 
     if (!session) {

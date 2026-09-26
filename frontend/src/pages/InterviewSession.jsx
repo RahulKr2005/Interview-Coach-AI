@@ -280,7 +280,7 @@ export default function InterviewSession({ setActivePage, onCompleteSession }) {
     try {
       setSubmitting(true);
       setError(null);
-      const res = await api.submitAnswer(currentQ.id, userAnswer);
+      const res = await api.submitAnswer(currentQ.id, userAnswer, session?.id || session?._id);
       setFeedback(res.feedback);
 
       // Update question in local state
