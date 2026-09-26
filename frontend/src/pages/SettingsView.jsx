@@ -502,53 +502,6 @@ export default function SettingsView() {
           </div>
         </form>
       </Card>
-
-      {/* Snapdragon PC Alignment & Windows on ARM Card */}
-      <Card
-        title="Snapdragon-Powered HP PC Alignment"
-        subtitle="Hardware compatibility, architecture, and NPU acceleration roadmap"
-      >
-        <div className="space-y-4 text-xs text-slate-600 leading-relaxed">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block mb-1">
-                1. Implemented Features
-              </span>
-              <p className="text-slate-800 font-medium">
-                Offline placement coach, pure-Python PDF extraction (`pypdf`), local SQLite database, 60+ curated questions with rubrics, and OpenAI-compatible adapter.
-              </p>
-            </div>
-
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block mb-1">
-                2. Current Environment
-              </span>
-              <p className="text-slate-800 font-medium">
-                FastAPI, Node.js, and standard web technologies tested locally. Zero C++ wheel compilations required.
-              </p>
-            </div>
-
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block mb-1">
-                3. Snapdragon NPU Roadmap
-              </span>
-              <p className="text-slate-800 font-medium">
-                Inference backend adapter is isolated. Can be replaced with ONNX Runtime GenAI leveraging Qualcomm QNN Execution Provider for Snapdragon X Elite NPU acceleration.
-              </p>
-            </div>
-          </div>
-
-          <div className="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-900">
-            <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-semibold block mb-0.5">Offline & Privacy Guarantees:</span>
-              <span>
-                The backend is bound exclusively to `127.0.0.1`. No candidate resumes, answers, or metrics are uploaded to external cloud endpoints. Local SQLite storage is stored in plaintext on disk and is not automatically encrypted by the application.
-              </span>
-            </div>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }
